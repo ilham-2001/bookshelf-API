@@ -106,7 +106,32 @@ const getAllBooksHandler = (req, h) => {
 };
 
 const getBooksByIdHandler = (req, h) => {
+  const {bookId: uid} = req.params;
+
   const file = fn.getFileData();
+  const book = file.find((book) => book.id === uid);
+
+  if (!book) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Buku tidak ditemukan',
+    });
+
+    response.code(404);
+
+    return response;
+  }
+
+  const response = h.response({
+    status: 'success',
+    data: {
+      book,
+    },
+  });
+
+  response.code(200);
+
+  return response;
 };
 
 module.exports = {addBooksHandler, getAllBooksHandler, getBooksByIdHandler};

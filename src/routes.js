@@ -12,8 +12,8 @@ const routes = [
     handler: handler.getAllBooksHandler,
   },
   {
-    method: 'POST',
-    path: '/books/{bookid}',
+    method: 'GET',
+    path: '/books/{bookId}',
     handler: handler.getBooksByIdHandler,
   },
 ];
