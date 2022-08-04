@@ -12,6 +12,6 @@
     },
     "rules": {
         "no-unused-vars":"warn",
-        "max-lines":"off"
+        "max-lines": "off"
     }
 }

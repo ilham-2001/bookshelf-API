@@ -1,5 +1,15 @@
+/* eslint-disable max-len */
 const {nanoid} = require('nanoid');
 const fs = require('fs');
+
+const insertedCheck = (id) => {
+  const books = fs.readFileSync('./src/data/books.json').toString();
+  const booksJson = JSON.parse(books);
+
+  const success = booksJson.find((book) => book.id === id);
+
+  return success? true: false;
+};
 
 const addBooksHandler = (req, h) => {
   const {
@@ -17,6 +27,7 @@ const addBooksHandler = (req, h) => {
   const insertedAt = new Date().toISOString();
   const updatedAt = insertedAt;
 
+
   if (!name) {
     const response = h.response({
       status: 'fail',
@@ -29,10 +40,9 @@ const addBooksHandler = (req, h) => {
   }
 
   if (readPage > pageCount) {
-    const response = h.respone({
+    const response = h.response({
       status: 'fail',
-      message: `Gagal menambahkan buku. 
-      readPage tidak boleh lebih besar dari pageCount`,
+      message: 'Gagal menambahkan buku. readPage tidak boleh lebih besar dari pageCount',
     });
 
     response.code(400);
@@ -54,39 +64,36 @@ const addBooksHandler = (req, h) => {
     insertedAt,
     updatedAt};
 
-  fs.readFile('./src/data/books.json', (err, data) => {
-    const file = JSON.parse(data.toString());
+  const file = fs.readFileSync('./src/data/books.json').toString();
+  const fileJson = JSON.parse(file);
+  fileJson.push(newBooks);
 
-    file.push(newBooks);
+  const fd = fs.openSync('./src/data/books.json', 'r+');
 
-    fs.writeFile('./src/data/books.json', JSON.stringify(file), (err) => {
-      if (err) {
-        const response = h.response({
-          status: 'error',
-          message: 'Buku gagal ditambahkan',
-        });
+  fs.writeSync(fd, JSON.stringify(fileJson));
 
-        console.log('Hello');
+  const isSuccess = insertedCheck(id);
 
-        response.code(500);
-        return response;
-      }
-    });
-
+  if (!isSuccess) {
     const response = h.response({
-      status: 'success',
-      message: 'Buku berhasil ditambahkan',
-      data: {
-        bookId: id,
-      },
+      status: 'error',
+      message: 'Buku gagal ditambahkan',
     });
-
-    console.log('Berhasil');
-
-    response.code(201);
+    response.code(500);
 
     return response;
+  }
+
+  const response = h.response({
+    status: 'success',
+    message: 'Buku berhasil ditambahkan',
+    data: {
+      bookId: id,
+    },
   });
+  response.code(201);
+
+  return response;
 };
 
 // const testReadFile = () => {
