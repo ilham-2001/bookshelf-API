@@ -1,15 +1,6 @@
 /* eslint-disable max-len */
 const {nanoid} = require('nanoid');
-const fs = require('fs');
-
-const insertedCheck = (id) => {
-  const books = fs.readFileSync('./src/data/books.json').toString();
-  const booksJson = JSON.parse(books);
-
-  const success = booksJson.find((book) => book.id === id);
-
-  return success? true: false;
-};
+const fn = require('./functions');
 
 const addBooksHandler = (req, h) => {
   const {
@@ -64,15 +55,11 @@ const addBooksHandler = (req, h) => {
     insertedAt,
     updatedAt};
 
-  const file = fs.readFileSync('./src/data/books.json').toString();
-  const fileJson = JSON.parse(file);
-  fileJson.push(newBooks);
+  const fileJson = fn.insertDataToFile(newBooks);
 
-  const fd = fs.openSync('./src/data/books.json', 'r+');
+  fn.writeDataToFile(fileJson);
 
-  fs.writeSync(fd, JSON.stringify(fileJson));
-
-  const isSuccess = insertedCheck(id);
+  const isSuccess = fn.insertedCheck(id);
 
   if (!isSuccess) {
     const response = h.response({
@@ -96,21 +83,30 @@ const addBooksHandler = (req, h) => {
   return response;
 };
 
-// const testReadFile = () => {
-//   fs.readFile('./src/data/books.json', (err, data) => {
-//     const file = JSON.parse(data.toString());
-//     file.push({name: 'Rudy'});
+const getAllBooksHandler = (req, h) => {
+  const books = [];
+  const file = fn.getFileData();
 
-//     fs.writeFile('./src/data/books.json', JSON.stringify(file), (err) => {
-//       if (err) {
-//         throw new MediaError('Fail to write');
-//       }
+  file.forEach((book) => {
+    const {id, name, publisher} = book;
 
-//       console.log('berhasil');
-//     });
-//   });
-// };
+    books.push({id, name, publisher});
+  });
 
-// testReadFile();
+  const response = h.response({
+    status: 'success',
+    data: {
+      books,
+    },
+  });
 
-module.exports = {addBooksHandler};
+  response.code(200);
+
+  return response;
+};
+
+const getBooksByIdHandler = (req, h) => {
+  const file = fn.getFileData();
+};
+
+module.exports = {addBooksHandler, getAllBooksHandler, getBooksByIdHandler};
