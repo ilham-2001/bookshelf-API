@@ -26,9 +26,39 @@ const insertDataToFile = (obj) => {
 };
 
 const writeDataToFile = (arr) => {
-  const fd = fs.openSync('./src/data/books.json', 'r+');
-
-  fs.writeSync(fd, JSON.stringify(arr));
+  fs.writeFileSync('./src/data/books.json', JSON.stringify(arr));
 };
 
-module.exports = {getFileData, insertDataToFile, insertedCheck, writeDataToFile};
+const findBookById = (uid) => {
+  const file = getFileData();
+
+  const book = file.find((book) => book.id === uid);
+  const isFound = book? true: false;
+
+  return {isFound, book};
+};
+
+const updateFile= (obj, uid) => {
+  const file = getFileData();
+  const {name, year, author, summary, publisher, pageCount, readPage, reading, updatedAt} = obj;
+
+  const index = file.findIndex((book) => book.id === uid);
+
+  file[index] = {
+    ...file[index],
+    name,
+    year,
+    author,
+    updatedAt,
+    publisher,
+    summary,
+    reading,
+    pageCount,
+    readPage,
+  };
+
+
+  writeDataToFile(file);
+};
+
+module.exports = {getFileData, insertDataToFile, insertedCheck, writeDataToFile, findBookById, updateFile};

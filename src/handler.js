@@ -48,12 +48,13 @@ const addBooksHandler = (req, h) => {
     author,
     summary,
     publisher,
-    pageCount,
-    readPage,
+    insertedAt,
+    updatedAt,
     finished,
     reading,
-    insertedAt,
-    updatedAt};
+    pageCount,
+    readPage,
+  };
 
   const fileJson = fn.insertDataToFile(newBooks);
 
@@ -107,11 +108,9 @@ const getAllBooksHandler = (req, h) => {
 
 const getBooksByIdHandler = (req, h) => {
   const {bookId: uid} = req.params;
+  const {isFound, book} = fn.findBookById(uid);
 
-  const file = fn.getFileData();
-  const book = file.find((book) => book.id === uid);
-
-  if (!book) {
+  if (!isFound) {
     const response = h.response({
       status: 'fail',
       message: 'Buku tidak ditemukan',
@@ -134,4 +133,65 @@ const getBooksByIdHandler = (req, h) => {
   return response;
 };
 
-module.exports = {addBooksHandler, getAllBooksHandler, getBooksByIdHandler};
+const updateBookByIdHandler = (req, h) => {
+  const {bookId: uid} = req.params;
+  const {
+    name,
+    year,
+    author,
+    summary,
+    publisher,
+    reading,
+    pageCount,
+    readPage} = req.payload;
+
+  if (!name) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Gagal memperbarui buku. Mohon isi nama buku',
+    });
+
+    response.code(400);
+
+    return response;
+  }
+
+  if (readPage > pageCount) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount',
+    });
+
+    response.code(400);
+
+    return response;
+  }
+
+  const {isFound} = fn.findBookById(uid);
+
+  if (!isFound) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Gagal memperbarui buku. Id tidak ditemukan',
+    });
+
+    response.code(404);
+
+    return response;
+  }
+
+  const updatedAt = new Date().toISOString();
+
+  fn.updateFile({name, year, author, summary, publisher, updatedAt, reading, pageCount, readPage}, uid);
+
+  const resposne = h.response({
+    status: 'success',
+    message: 'Buku berhasil diperbarui',
+  });
+
+  resposne.code(200);
+
+  return resposne;
+};
+
+module.exports = {addBooksHandler, getAllBooksHandler, getBooksByIdHandler, updateBookByIdHandler};

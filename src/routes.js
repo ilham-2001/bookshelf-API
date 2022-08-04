@@ -16,6 +16,11 @@ const routes = [
     path: '/books/{bookId}',
     handler: handler.getBooksByIdHandler,
   },
+  {
+    method: 'PUT',
+    path: '/books/{bookId}',
+    handler: handler.updateBookByIdHandler,
+  },
 ];
 
 module.exports = {routes};
