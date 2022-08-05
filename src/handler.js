@@ -84,19 +84,36 @@ const addBooksHandler = async (req, h) => {
 };
 
 const getAllBooksHandler = async (req, h) => {
-  const books = [];
-  const file = await fn.readFile();
+  const query = req.query;
+  const isEmpty = Object.keys(query).length === 0;
 
-  file.forEach((book) => {
-    const {id, name, publisher} = book;
+  if (isEmpty) {
+    const file = await fn.readFile();
+    const books = [];
 
-    books.push({id, name, publisher});
-  });
+    file.forEach((book) => {
+      const {id, name, publisher} = book;
+      books.push({id, name, publisher});
+    });
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        books,
+      },
+    });
+
+    response.code(200);
+
+    return response;
+  }
+
+  const filteredBooks = await fn.search(query);
 
   const response = h.response({
     status: 'success',
     data: {
-      books,
+      books: filteredBooks,
     },
   });
 

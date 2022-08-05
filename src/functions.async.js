@@ -94,4 +94,49 @@ const deleteBook = async (uid) => {
   }
 };
 
-module.exports = {readFile, writeFile, verifyFile, find, updateFile, deleteBook, insert};
+const search = async (object) => {
+  const {finished, reading, name} = object;
+  const books = [];
+  const file = await readFile();
+
+  if (finished && !reading && !name) {
+    file.forEach((book) => {
+      if (Number(book.finished) == Number(finished)) {
+        const {id, name, publisher} = book;
+
+        books.push({id, name, publisher});
+      }
+    });
+
+    return books;
+  }
+
+  if (reading && !finished && !name) {
+    file.forEach((book) => {
+      if (Number(reading) === Number(book.reading)) {
+        const {id, name, publisher} = book;
+
+        books.push({id, name, publisher});
+      }
+    });
+
+    return books;
+  }
+
+  if (name && !finished && !reading) {
+    file.forEach((book) => {
+      const nameTags = book.name.split(' ');
+      const mapArr = nameTags.map((tag) => tag.toLowerCase());
+
+      if (mapArr.includes(name.toLowerCase())) {
+        const {id, name, publisher} = book;
+
+        books.push({id, name, publisher});
+      }
+    });
+
+    return books;
+  }
+};
+
+module.exports = {readFile, writeFile, verifyFile, find, updateFile, deleteBook, insert, search};
