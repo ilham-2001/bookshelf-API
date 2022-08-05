@@ -6,6 +6,7 @@
   "scripts": {
     "start-dev": "nodemon ./src/server.js",
     "start-prod": "NODE_ENV=production node ./src/server.js",
+    "start-testing": "nodemon ./src/testing.js",
     "lint": "eslint ./src/"
   },
   "keywords": [],
