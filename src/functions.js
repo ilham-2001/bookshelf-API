@@ -4,67 +4,82 @@
  * Syncronus API Functions
  */
 
-const fs = require('fs');
-// const fs = require('fs/promises');
+const books = require('./data/books');
 
-const getFileData = () => {
-  const books = fs.readFileSync('./src/data/books.json').toString();
-  const booksJson = JSON.parse(books);
-
-  return booksJson;
+const read = () => {
+  return books;
 };
 
-const insertedCheck = (id) => {
-  const books = fs.readFileSync('./src/data/books.json').toString();
-  const booksJson = JSON.parse(books);
-
-  const success = booksJson.find((book) => book.id === id);
+const verify = (uid) => {
+  const success = books.find((book) => book.id === uid);
 
   return success ? true : false;
 };
 
-const insertDataToFile = (obj) => {
-  const file = fs.readFileSync('./src/data/books.json').toString();
-  const fileJson = JSON.parse(file);
-  fileJson.push(obj);
-
-  return fileJson;
+const insert = (obj) => {
+  books.push(obj);
 };
 
-const writeDataToFile = (arr) => {
-  fs.writeFileSync('./src/data/books.json', JSON.stringify(arr));
-};
-
-const findBookById = (uid) => {
-  const file = getFileData();
-
-  const book = file.find((book) => book.id === uid);
+const findById = (uid) => {
+  const book = books.find((book) => book.id === uid);
   const isFound = book? true: false;
 
   return {isFound, book};
 };
 
-const updateFile= (obj, uid) => {
-  const file = getFileData();
-  const {name, year, author, summary, publisher, pageCount, readPage, reading, updatedAt} = obj;
+const update = (obj, uid) => {
+  const index = books.findIndex((book) => book.id === uid);
 
-  const index = file.findIndex((book) => book.id === uid);
-
-  file[index] = {
-    ...file[index],
-    name,
-    year,
-    author,
-    updatedAt,
-    publisher,
-    summary,
-    reading,
-    pageCount,
-    readPage,
+  books[index] = {
+    ...books[index],
+    ...obj,
   };
-
-
-  writeDataToFile(file);
 };
 
-module.exports = {getFileData, insertDataToFile, insertedCheck, writeDataToFile, findBookById, updateFile};
+const deleteBook = (uid) => {
+  const index = books.findIndex((book) => book.id === uid);
+
+  books.splice(index, 1);
+};
+
+const search = (object) => {
+  const {finished, reading, name} = object;
+  const retVal = [];
+
+  if (finished && !reading && !name) {
+    books.forEach((book) => {
+      if (Number(book.finished) == Number(finished)) {
+        const {id, name, publisher} = book;
+
+        retVal.push({id, name, publisher});
+      }
+    });
+  }
+
+  if (reading && !finished && !name) {
+    books.forEach((book) => {
+      if (Number(reading) === Number(book.reading)) {
+        const {id, name, publisher} = book;
+
+        retVal.push({id, name, publisher});
+      }
+    });
+  }
+
+  if (name && !finished && !reading) {
+    books.forEach((book) => {
+      const nameTags = book.name.split(' ');
+      const mapArr = nameTags.map((tag) => tag.toLowerCase());
+
+      if (mapArr.includes(name.toLowerCase())) {
+        const {id, name, publisher} = book;
+
+        retVal.push({id, name, publisher});
+      }
+    });
+  }
+
+  return retVal;
+};
+
+module.exports = {read, insert, verify, findById, update, search, deleteBook};

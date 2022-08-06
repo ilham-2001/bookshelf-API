@@ -1,8 +1,8 @@
 /* eslint-disable max-len */
 const {nanoid} = require('nanoid');
-const fn = require('./functions.async');
+const fn = require('./functions');
 
-const addBooksHandler = async (req, h) => {
+const addBooksHandler = (req, h) => {
   const {
     name,
     year,
@@ -14,7 +14,7 @@ const addBooksHandler = async (req, h) => {
     reading} = req.payload;
 
   const id = nanoid(16);
-  const finished = false;
+  const finished = (pageCount === readPage);
   const insertedAt = new Date().toISOString();
   const updatedAt = insertedAt;
 
@@ -56,10 +56,9 @@ const addBooksHandler = async (req, h) => {
     readPage,
   };
 
-  const file = await fn.insert(newBooks);
-  fn.writeFile(file);
+  fn.insert(newBooks);
 
-  const isSuccess = await fn.verifyFile(id);
+  const isSuccess = fn.verify(id);
 
   if (!isSuccess) {
     const response = h.response({
@@ -83,12 +82,12 @@ const addBooksHandler = async (req, h) => {
   return response;
 };
 
-const getAllBooksHandler = async (req, h) => {
+const getAllBooksHandler = (req, h) => {
   const query = req.query;
   const isEmpty = Object.keys(query).length === 0;
 
   if (isEmpty) {
-    const file = await fn.readFile();
+    const file = fn.read();
     const books = [];
 
     file.forEach((book) => {
@@ -108,7 +107,7 @@ const getAllBooksHandler = async (req, h) => {
     return response;
   }
 
-  const filteredBooks = await fn.search(query);
+  const filteredBooks = fn.search(query);
 
   const response = h.response({
     status: 'success',
@@ -122,9 +121,9 @@ const getAllBooksHandler = async (req, h) => {
   return response;
 };
 
-const getBooksByIdHandler = async (req, h) => {
+const getBooksByIdHandler = (req, h) => {
   const {bookId: uid} = req.params;
-  const {isFound, book} = await fn.find(uid);
+  const {isFound, book} = fn.findById(uid);
 
   if (!isFound) {
     const response = h.response({
@@ -149,7 +148,7 @@ const getBooksByIdHandler = async (req, h) => {
   return response;
 };
 
-const updateBookByIdHandler = async (req, h) => {
+const updateBookByIdHandler = (req, h) => {
   const {bookId: uid} = req.params;
   const {
     name,
@@ -183,7 +182,7 @@ const updateBookByIdHandler = async (req, h) => {
     return response;
   }
 
-  const {isFound} = await fn.find(uid);
+  const {isFound} = fn.findById(uid);
 
   if (!isFound) {
     const response = h.response({
@@ -198,7 +197,7 @@ const updateBookByIdHandler = async (req, h) => {
 
   const updatedAt = new Date().toISOString();
 
-  fn.updateFile({name, year, author, summary, publisher, updatedAt, reading, pageCount, readPage}, uid);
+  fn.update({name, year, author, summary, publisher, updatedAt, reading, pageCount, readPage}, uid);
 
   const response = h.response({
     status: 'success',
@@ -210,10 +209,10 @@ const updateBookByIdHandler = async (req, h) => {
   return response;
 };
 
-const deleteBookHandler = async (req, h) => {
+const deleteBookHandler = (req, h) => {
   const {bookId: uid} = req.params;
 
-  const {isFound} = await fn.find(uid);
+  const {isFound} = fn.findById(uid);
 
   if (!isFound) {
     const response = h.response({
