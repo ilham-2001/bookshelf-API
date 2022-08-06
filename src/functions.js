@@ -1,5 +1,11 @@
 /* eslint-disable max-len */
+
+/**
+ * Syncronus API Functions
+ */
+
 const fs = require('fs');
+// const fs = require('fs/promises');
 
 const getFileData = () => {
   const books = fs.readFileSync('./src/data/books.json').toString();

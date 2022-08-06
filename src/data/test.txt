@@ -1,9 +1,0 @@
-"{
-\"name\": \"Dota 2\",
-\"year\": \"2011\",
-\"author\": \"Valve\",
-\"summary\": \"Game\",
-\"publisher\": \"Valve\",
-\"pageCount\": \"300\",
-\"readPage\": \"100\",
-\"reading\": \"false\"}"

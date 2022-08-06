@@ -1,8 +1,8 @@
 /* eslint-disable max-len */
 const {nanoid} = require('nanoid');
-const fn = require('./functions');
+const fn = require('./functions.async');
 
-const addBooksHandler = (req, h) => {
+const addBooksHandler = async (req, h) => {
   const {
     name,
     year,
@@ -56,11 +56,10 @@ const addBooksHandler = (req, h) => {
     readPage,
   };
 
-  const fileJson = fn.insertDataToFile(newBooks);
+  const file = await fn.insert(newBooks);
+  fn.writeFile(file);
 
-  fn.writeDataToFile(fileJson);
-
-  const isSuccess = fn.insertedCheck(id);
+  const isSuccess = await fn.verifyFile(id);
 
   if (!isSuccess) {
     const response = h.response({
@@ -84,20 +83,37 @@ const addBooksHandler = (req, h) => {
   return response;
 };
 
-const getAllBooksHandler = (req, h) => {
-  const books = [];
-  const file = fn.getFileData();
+const getAllBooksHandler = async (req, h) => {
+  const query = req.query;
+  const isEmpty = Object.keys(query).length === 0;
 
-  file.forEach((book) => {
-    const {id, name, publisher} = book;
+  if (isEmpty) {
+    const file = await fn.readFile();
+    const books = [];
 
-    books.push({id, name, publisher});
-  });
+    file.forEach((book) => {
+      const {id, name, publisher} = book;
+      books.push({id, name, publisher});
+    });
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        books,
+      },
+    });
+
+    response.code(200);
+
+    return response;
+  }
+
+  const filteredBooks = await fn.search(query);
 
   const response = h.response({
     status: 'success',
     data: {
-      books,
+      books: filteredBooks,
     },
   });
 
@@ -106,9 +122,9 @@ const getAllBooksHandler = (req, h) => {
   return response;
 };
 
-const getBooksByIdHandler = (req, h) => {
+const getBooksByIdHandler = async (req, h) => {
   const {bookId: uid} = req.params;
-  const {isFound, book} = fn.findBookById(uid);
+  const {isFound, book} = await fn.find(uid);
 
   if (!isFound) {
     const response = h.response({
@@ -133,7 +149,7 @@ const getBooksByIdHandler = (req, h) => {
   return response;
 };
 
-const updateBookByIdHandler = (req, h) => {
+const updateBookByIdHandler = async (req, h) => {
   const {bookId: uid} = req.params;
   const {
     name,
@@ -167,7 +183,7 @@ const updateBookByIdHandler = (req, h) => {
     return response;
   }
 
-  const {isFound} = fn.findBookById(uid);
+  const {isFound} = await fn.find(uid);
 
   if (!isFound) {
     const response = h.response({
@@ -184,14 +200,42 @@ const updateBookByIdHandler = (req, h) => {
 
   fn.updateFile({name, year, author, summary, publisher, updatedAt, reading, pageCount, readPage}, uid);
 
-  const resposne = h.response({
+  const response = h.response({
     status: 'success',
     message: 'Buku berhasil diperbarui',
   });
 
-  resposne.code(200);
+  response.code(200);
 
-  return resposne;
+  return response;
 };
 
-module.exports = {addBooksHandler, getAllBooksHandler, getBooksByIdHandler, updateBookByIdHandler};
+const deleteBookHandler = async (req, h) => {
+  const {bookId: uid} = req.params;
+
+  const {isFound} = await fn.find(uid);
+
+  if (!isFound) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Buku gagal dihapus. Id tidak ditemukan',
+    });
+
+    response.code(404);
+
+    return response;
+  }
+
+  fn.deleteBook(uid);
+
+  const response = h.response({
+    status: 'success',
+    message: 'Buku berhasil dihapus',
+  });
+
+  response.code(200);
+
+  return response;
+};
+
+module.exports = {addBooksHandler, getAllBooksHandler, getBooksByIdHandler, updateBookByIdHandler, deleteBookHandler};
